@@ -19,19 +19,32 @@ export default function (pi: ExtensionAPI) {
 
       execSync("git add -A", { stdio: "pipe" });
 
-      // 用 diff --stat 生成变更摘要
-      const stat = execSync(
-        "git -c core.quotePath=false diff --cached --stat",
+      // 用 diff --numstat 提取文件变更（制表符分隔：增 删 路径）
+      const numstat = execSync(
+        "git -c core.quotePath=false diff --cached --numstat",
         { encoding: "utf-8", stdio: "pipe" }
       ).trim();
 
-      // --stat 最后一行是汇总，前面是每个文件的变更行数
-      const summary = stat
+      const changes = numstat
         .split("\n")
-        .slice(0, -1) // 去掉最后汇总行
-        .map((l) => l.trim())
         .filter(Boolean)
-        .join("; ");
+        .map((line) => {
+          const [add, del, ...fileParts] = line.split("\t");
+          const file = fileParts.join("\t");
+          const a = parseInt(add) || 0;
+          const d = parseInt(del) || 0;
+          const parts: string[] = [];
+          if (a > 0) parts.push(`+${a}`);
+          if (d > 0) parts.push(`-${d}`);
+          return parts.length > 0
+            ? `${file} (${parts.join(" ")})`
+            : file;
+        });
+
+      const summary =
+        changes.length <= 3
+          ? changes.join(", ")
+          : `${changes.slice(0, 2).join(", ")} 等 ${changes.length} 个文件`;
 
       const msg = summary ? `auto: ${summary}` : "auto: commit";
 
