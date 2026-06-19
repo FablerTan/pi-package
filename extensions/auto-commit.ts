@@ -52,7 +52,11 @@ export default function (pi: ExtensionAPI) {
         stdio: "pipe",
       });
 
-      ctx.ui?.setStatus("auto-commit", `✓ ${summary.slice(0, 60)}`);
+      const statusLabel =
+        changes.length <= 3
+          ? summary
+          : `✓ ${changes.length} files: ${changes[0]}, ...`;
+      ctx.ui?.setStatus("auto-commit", statusLabel);
     } catch {
       // 静默
     }
