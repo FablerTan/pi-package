@@ -54,8 +54,8 @@ export default function (pi: ExtensionAPI) {
 
       const statusLabel =
         changes.length <= 3
-          ? summary
-          : `✓ ${changes.length} files: ${changes[0]}, ...`;
+          ? `📝 ${summary}`
+          : `📝 ${changes.length} files: ${changes[0]}, ...`;
       ctx.ui?.setStatus("auto-commit", statusLabel);
     } catch {
       // 静默
