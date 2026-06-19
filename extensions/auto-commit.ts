@@ -52,10 +52,15 @@ export default function (pi: ExtensionAPI) {
         stdio: "pipe",
       });
 
+      const time = new Date().toLocaleTimeString("zh-CN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
       const statusLabel =
         changes.length <= 3
-          ? summary
-          : `${changes.length} files: ${changes[0]}, ...`;
+          ? `已提交 ${summary} · ${time}`
+          : `已提交 ${changes.length} 个文件 · ${time}`;
       ctx.ui?.setStatus("auto-commit", statusLabel);
     } catch {
       // 静默
