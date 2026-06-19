@@ -1,0 +1,13 @@
+{
+  "name": "pi-docs-create",
+  "version": "0.1.0",
+  "description": "文档技能工厂——给定文档站 URL，自动生成可复用的文档查阅技能",
+  "keywords": ["pi-package", "pi-skill", "documentation", "docs-generator"],
+  "author": "fabler",
+  "license": "MIT",
+  "pi": {
+    "skills": ["./skills"],
+    "extensions": ["./extensions"],
+    "prompts": ["./prompts"]
+  }
+}
