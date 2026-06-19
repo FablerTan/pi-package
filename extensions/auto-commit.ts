@@ -18,9 +18,18 @@ export default function (pi: ExtensionAPI) {
       ).trim();
       if (!status) return;
 
+      // 解析操作类型：+新增 -删除 ~修改
+      const opMap = new Map<string, string>();
+      for (const l of status.split("\n")) {
+        const code = l.slice(0, 2).trim()[0];
+        const path = l.slice(3).trim();
+        if (code === "A" || code === "?") opMap.set(path, "+");
+        else if (code === "D") opMap.set(path, "-");
+        else opMap.set(path, "~");
+      }
+
       execSync("git add -A", { stdio: "pipe" });
 
-      // 用 diff --numstat 提取文件变更（制表符分隔：增 删 路径）
       const numstat = execSync(
         "git -c core.quotePath=false diff --cached --numstat",
         { encoding: "utf-8", stdio: "pipe" }
@@ -33,12 +42,14 @@ export default function (pi: ExtensionAPI) {
           const [add, del, ...fileParts] = line.split("\t");
           const file = fileParts.join("\t");
           const name = basename(file);
+          const op = opMap.get(file) || "~";
           const a = parseInt(add) || 0;
           const d = parseInt(del) || 0;
-          const parts: string[] = [];
-          if (a > 0) parts.push(`+${a}`);
-          if (d > 0) parts.push(`-${d}`);
-          return { file, name, stat: parts.length > 0 ? `${name} (${parts.join(" ")})` : name };
+          let stat: string;
+          if (op === "+") stat = a > 0 ? `+${a}` : "new";
+          else if (op === "-") stat = d > 0 ? `-${d}` : "del";
+          else stat = `~${a > 0 ? `+${a}` : ""}${d > 0 ? `-${d}` : ""}`;
+          return { file, name, stat: `${name} (${stat})` };
         });
 
       const summary =
@@ -49,12 +60,10 @@ export default function (pi: ExtensionAPI) {
               .map((c) => c.stat)
               .join(", ") + ` 等 ${changes.length} 个文件`;
 
-      // commit 信息用完整路径，状态栏用文件名
-      const commitMsg =
+      const msg =
         changes.length <= 3
           ? changes.map((c) => c.stat).join(", ")
           : `${changes.length} 个文件`;
-      const msg = commitMsg;
 
       execSync(`git commit -m "${msg.replace(/"/g, '\\"')}"`, {
         stdio: "pipe",
