@@ -51,7 +51,6 @@ export default function (pi: ExtensionAPI) {
       execSync(`git commit -m "${msg.replace(/"/g, '\\"')}"`, { stdio: "pipe" });
 
       const label = summary || fileSummary;
-      ctx.ui?.notify(`✓ auto-commit: ${label}`, "info");
       ctx.ui?.setStatus("auto-commit", `✓ ${label}`);
     } catch {
       // 静默
