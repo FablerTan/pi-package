@@ -1,6 +1,6 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { execSync } from "node:child_process";
-import { basename } from "node:path";
+import { basename, extname } from "node:path";
 
 export default function (pi: ExtensionAPI) {
   pi.on("agent_end", async (_event, ctx) => {
