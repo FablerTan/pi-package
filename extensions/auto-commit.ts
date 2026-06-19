@@ -13,6 +13,7 @@ export default function (pi: ExtensionAPI) {
     try {
       execSync("git rev-parse --git-dir", { stdio: "pipe" });
     } catch {
+      ctx.ui?.setStatus("auto-commit", "⚠ 非 git 仓库，自动提交已停用");
       return;
     }
 
@@ -87,12 +88,12 @@ export default function (pi: ExtensionAPI) {
       // 暂存待 commit 信息
       pending = { files, ops };
 
-      // 请求 pi 生成一句话摘要
+      // 请求 pi 生成一句话摘要（followUp：等待 agent 完全结束后再发）
       const prompt = `[auto-commit] 用一句中文（不超过30字，不要标点）总结以下操作的意图：
 
 ${userMessages.slice(0, 200)}
 文件变更：${fileSummary}`;
-      pi.sendUserMessage(prompt);
+      pi.sendUserMessage(prompt, { deliverAs: "followUp" });
     } catch {
       pending = null;
     }
