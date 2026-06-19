@@ -11,7 +11,7 @@ export default function (pi: ExtensionAPI) {
     }
 
     try {
-      const status = execSync("git status --porcelain", {
+      const status = execSync("git -c core.quotePath=false status --porcelain", {
         encoding: "utf-8",
         stdio: "pipe",
       }).trim();
