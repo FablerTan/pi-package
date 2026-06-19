@@ -54,7 +54,7 @@ export default function (pi: ExtensionAPI) {
         changes.length <= 3
           ? changes.map((c) => c.stat).join(", ")
           : `${changes.length} 个文件`;
-      const msg = `auto: ${commitMsg}`;
+      const msg = commitMsg;
 
       execSync(`git commit -m "${msg.replace(/"/g, '\\"')}"`, {
         stdio: "pipe",
