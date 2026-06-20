@@ -60,6 +60,8 @@ export default function (pi: ExtensionAPI) {
         customType: "auto-commit",
         content: result,
         display: true,
+      }, {
+        triggerTurn: false,
       });
       // 状态栏（交互模式）
       ctx.ui?.setStatus("auto-commit", result);
