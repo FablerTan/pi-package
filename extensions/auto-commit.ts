@@ -1,6 +1,6 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { execSync } from "node:child_process";
-import { basename } from "node:path";
+import { resolve } from "node:path";
 
 const FILE_TOOLS = ["write", "edit"];
 const MUTATING_CMDS = ["rm ", "mv ", "cp ", "mkdir ", "touch "];
@@ -20,7 +20,7 @@ export default function (pi: ExtensionAPI) {
     }
   });
 
-  pi.on("agent_end", async () => {
+  pi.on("agent_end", async (event) => {
     if (!modified) return;
     modified = false;
 
@@ -44,21 +44,24 @@ export default function (pi: ExtensionAPI) {
         { encoding: "utf-8", stdio: "pipe" }
       ).trim();
 
-      const files = numstat
-        .split("\n")
-        .filter(Boolean)
-        .map((l) => {
-          const [add, del, ...fp] = l.split("\t");
-          const name = basename(fp.join("\t"));
-          const a = parseInt(add) || 0;
-          const d = parseInt(del) || 0;
-          return `${name} ${a > 0 ? `+${a}` : ""}${d > 0 ? `-${d}` : ""}`.trim();
-        })
-        .join(", ");
+      const userMsg = event.messages
+        ?.filter((m) => m.role === "user")
+        ?.map((m) => (typeof m.content === "string" ? m.content : ""))
+        ?.join(" ")
+        ?.trim()
+        ?.slice(0, 200) || "";
 
-      execSync(`git commit -m "${files}"`, { stdio: "pipe" });
+      const diff = execSync(
+        "git -c core.quotePath=false diff --cached --stat",
+        { encoding: "utf-8", stdio: "pipe" }
+      ).trim();
 
-      console.log(`\n📦 auto-commit: ${files}`);
+      const script = resolve(process.cwd(), "scripts/commit.sh");
+      const result = execSync(
+        `"${script}" "${userMsg.replace(/"/g, '\\"')}" "${diff.replace(/"/g, '\\"')}"`,
+        { encoding: "utf-8", stdio: "pipe", timeout: 60000 }
+      );
+      console.log(result.trim());
     } catch (e: any) {
       console.log(e.stderr || e.message);
     }
