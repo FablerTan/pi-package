@@ -4,10 +4,8 @@
 API_KEY=$(jq -r '.deepseek.key // empty' ~/.pi/agent/auth.json 2>/dev/null)
 
 if [ -z "$API_KEY" ]; then
-  echo "❌ 找不到 API Key，使用文件名提交"
-  git add -A
-  git commit -m "$(git -c core.quotePath=false diff --cached --name-only | tr '\n' ' ')"
-  exit 0
+  echo "git commit: ❌ 找不到 API Key"
+  exit 1
 fi
 
 USER_INTENT="$1"
@@ -32,12 +30,10 @@ SUMMARY=$(curl -s "$API_URL" \
     }')" | jq -r '.choices[0].message.content // empty')
 
 if [ -z "$SUMMARY" ]; then
-  echo "❌ 摘要生成失败，使用文件名提交"
-  git add -A
-  git commit -m "$(git -c core.quotePath=false diff --cached --name-only | tr '\n' ' ')"
-  exit 0
+  echo "git commit: ❌ 摘要生成失败"
+  exit 1
 fi
 
 git add -A
 git commit -m "$SUMMARY"
-echo "✅ $SUMMARY"
+echo "git commit -m \"$SUMMARY\""
