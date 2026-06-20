@@ -55,10 +55,14 @@ export default function (pi: ExtensionAPI) {
         { encoding: "utf-8", stdio: "pipe", timeout: 30000 }
       ).trim();
 
+      // 对话消息（交互 + RPC）
       pi.sendMessage({
-        role: "assistant",
-        content: `📦 ${result}`,
+        customType: "auto-commit",
+        content: result,
+        display: true,
       });
+      // 状态栏（交互模式）
+      ctx.ui?.setStatus("auto-commit", result);
     } catch (e: any) {
       console.log(e.stderr || e.message);
     }
