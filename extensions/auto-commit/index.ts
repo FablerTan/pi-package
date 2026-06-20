@@ -20,7 +20,7 @@ export default function (pi: ExtensionAPI) {
     }
   });
 
-  pi.on("agent_end", async (event) => {
+  pi.on("agent_end", async (event, ctx) => {
     if (!modified) return;
     modified = false;
 
@@ -49,12 +49,17 @@ export default function (pi: ExtensionAPI) {
         { encoding: "utf-8", stdio: "pipe" }
       ).trim();
 
-      execSync(
+      const output = execSync(
         `"${script}" "${userMsg.replace(/"/g, '\\"')}" "${diff.replace(/"/g, '\\"')}"`,
         { encoding: "utf-8", stdio: "pipe", timeout: 30000 }
-      );
-    } catch {
-      // 静默
+      ).toString().trim();
+
+      // 从 commit.sh 输出中提取 commit 摘要行
+      const match = output.match(/git commit -m "(.+)"/);
+      const summary = match ? match[1] : output;
+      ctx.ui.notify(`✅ auto-commit: ${summary}`, "info");
+    } catch (e) {
+      ctx.ui.notify(`❌ auto-commit 失败: ${(e as Error)?.message?.slice(0, 80) || "未知错误"}`, "error");
     }
   });
 }
