@@ -50,12 +50,15 @@ export default function (pi: ExtensionAPI) {
         { encoding: "utf-8", stdio: "pipe" }
       ).trim();
 
-      console.log(
-        execSync(
-          `"${script}" "${userMsg.replace(/"/g, '\\"')}" "${diff.replace(/"/g, '\\"')}"`,
-          { encoding: "utf-8", stdio: "pipe", timeout: 30000 }
-        ).trim()
-      );
+      const result = execSync(
+        `"${script}" "${userMsg.replace(/"/g, '\\"')}" "${diff.replace(/"/g, '\\"')}"`,
+        { encoding: "utf-8", stdio: "pipe", timeout: 30000 }
+      ).trim();
+
+      pi.sendMessage({
+        role: "assistant",
+        content: `📦 ${result}`,
+      });
     } catch (e: any) {
       console.log(e.stderr || e.message);
     }
