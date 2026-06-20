@@ -4,7 +4,6 @@ import { execSync } from "node:child_process";
 const FILE_TOOLS = ["write", "edit"];
 const MUTATING_CMDS = ["rm ", "mv ", "cp ", "mkdir ", "touch "];
 
-// commit.sh 相对项目根目录
 const script = "extensions/auto-commit/commit.sh";
 
 export default function (pi: ExtensionAPI) {
@@ -50,23 +49,12 @@ export default function (pi: ExtensionAPI) {
         { encoding: "utf-8", stdio: "pipe" }
       ).trim();
 
-      const result = execSync(
+      execSync(
         `"${script}" "${userMsg.replace(/"/g, '\\"')}" "${diff.replace(/"/g, '\\"')}"`,
         { encoding: "utf-8", stdio: "pipe", timeout: 30000 }
-      ).trim();
-
-      // 对话消息（交互 + RPC）
-      pi.sendMessage({
-        customType: "auto-commit",
-        content: result,
-        display: true,
-      }, {
-        triggerTurn: false,
-      });
-      // 状态栏（交互模式）
-      ctx.ui?.setStatus("auto-commit", result);
-    } catch (e: any) {
-      console.log(e.stderr || e.message);
+      );
+    } catch {
+      // 静默
     }
   });
 }
