@@ -2,7 +2,8 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { execSync } from "node:child_process";
 import { basename } from "node:path";
 
-const FILE_TOOLS = ["write", "edit", "bash"];
+const FILE_TOOLS = ["write", "edit"];
+const MUTATING_CMDS = ["rm ", "mv ", "cp ", "mkdir ", "touch "];
 
 export default function (pi: ExtensionAPI) {
   let modified = false;
@@ -10,6 +11,12 @@ export default function (pi: ExtensionAPI) {
   pi.on("tool_call", async (event) => {
     if (FILE_TOOLS.includes(event.toolName)) {
       modified = true;
+    }
+    if (event.toolName === "bash" && event.input?.command) {
+      const cmd = event.input.command as string;
+      if (MUTATING_CMDS.some((c) => cmd.startsWith(c))) {
+        modified = true;
+      }
     }
   });
 
