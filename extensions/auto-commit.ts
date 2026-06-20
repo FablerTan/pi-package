@@ -50,8 +50,8 @@ export default function (pi: ExtensionAPI) {
 ${diff}`;
 
       const result = execSync(
-        `pi --print -p "${prompt.replace(/"/g, '\\"')}"`,
-        { encoding: "utf-8", stdio: "pipe", timeout: 30000 }
+        `echo "${prompt.replace(/"/g, '\\"')}" | pi -p`,
+        { encoding: "utf-8", stdio: "pipe", timeout: 60000, cwd: process.cwd() }
       );
 
       console.log(result.trim());
