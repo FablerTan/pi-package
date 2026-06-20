@@ -1,5 +1,6 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { execSync } from "node:child_process";
+import { basename } from "node:path";
 
 const FILE_TOOLS = ["write", "edit", "bash"];
 
@@ -12,7 +13,7 @@ export default function (pi: ExtensionAPI) {
     }
   });
 
-  pi.on("agent_end", async (event) => {
+  pi.on("agent_end", async () => {
     if (!modified) return;
     modified = false;
 
@@ -31,30 +32,26 @@ export default function (pi: ExtensionAPI) {
 
       execSync("git add -A", { stdio: "pipe" });
 
-      const diff = execSync(
-        "git -c core.quotePath=false diff --cached --stat",
+      const numstat = execSync(
+        "git -c core.quotePath=false diff --cached --numstat",
         { encoding: "utf-8", stdio: "pipe" }
       ).trim();
 
-      const userMsg = event.messages
-        ?.filter((m) => m.role === "user")
-        ?.map((m) => (typeof m.content === "string" ? m.content : ""))
-        ?.join(" ")
-        ?.trim()
-        ?.slice(0, 200);
+      const files = numstat
+        .split("\n")
+        .filter(Boolean)
+        .map((l) => {
+          const [add, del, ...fp] = l.split("\t");
+          const name = basename(fp.join("\t"));
+          const a = parseInt(add) || 0;
+          const d = parseInt(del) || 0;
+          return `${name} ${a > 0 ? `+${a}` : ""}${d > 0 ? `-${d}` : ""}`.trim();
+        })
+        .join(", ");
 
-      const prompt = `根据以下上下文生成一句中文 commit 摘要（不超过30字，不要前缀），然后执行 git commit -m "摘要"：
+      execSync(`git commit -m "${files}"`, { stdio: "pipe" });
 
-用户意图：${userMsg}
-文件变更：
-${diff}`;
-
-      const result = execSync(
-        `echo "${prompt.replace(/"/g, '\\"')}" | pi -p`,
-        { encoding: "utf-8", stdio: "pipe", timeout: 60000, cwd: process.cwd() }
-      );
-
-      console.log(result.trim());
+      console.log(`\n📦 auto-commit: ${files}`);
     } catch (e: any) {
       console.log(e.stderr || e.message);
     }
