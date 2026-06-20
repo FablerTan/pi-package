@@ -34,6 +34,6 @@ if [ -z "$SUMMARY" ]; then
   exit 1
 fi
 
-git add -A
-git commit -m "$SUMMARY"
+git add -A 2>/dev/null
+git commit -m "$SUMMARY" 2>/dev/null
 echo "git commit -m \"$SUMMARY\""
